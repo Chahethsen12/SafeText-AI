@@ -1,0 +1,22 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+env/
+ENV/
+.env
+
+# MacOS folder attributes
+.DS_Store
+
+# IDEs
+.vscode/
+.idea/
+
+# Large model files (DistilBERT, LLaMA etc.)
+# It's recommended to host models on huggingface, S3, or use Git LFS instead of pushing directly to GitHub
+models/
+06_shap_lime/

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeText AI - Security Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-content">
+            <div class="logo-wrapper">
+                <svg class="shield-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+                <span class="logo-text">SafeText <b>AI</b></span>
+            </div>
+            <div class="nav-links">
+                <span class="status-indicator"><span class="dot"></span> System Online</span>
+                <button class="theme-toggle" id="themeBtn" onclick="toggleTheme()" aria-label="Toggle Theme"></button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="dashboard">
+        <header class="dashboard-header">
+            <h1>Adversarial Text Sanitization Framework</h1>
+            <p>Powered by DistinctBERT & TinyLlama-1.1B-Chat-v1.0</p>
+        </header>
+
+        <div class="workspace">
+            <div class="panel input-panel">
+                <div class="panel-header">
+                    <h2>Raw Input Stream</h2>
+                    <span class="badge badge-neutral">Awaiting Analysis</span>
+                </div>
+                <div class="panel-body">
+                    <textarea id="inputText" placeholder="Paste corrupted, toxic, or adversarial text here...
+
+Example: clｉｃk hｅｒe tо clａim yоur frее Bｉtсoｉn wаllet ｎow!!!"></textarea>
+                </div>
+                <div class="panel-footer">
+                    <button id="analyzeBtn" class="primary-btn" onclick="processText()">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h4l3-9 5 18 3-9h5"/></svg>
+                        Initialize Deep Scan
+                    </button>
+                </div>
+            </div>
+
+            <div class="panel output-panel">
+                <div class="panel-header">
+                    <h2>Sanitized Output Stream</h2>
+                    <div id="sensitivityContainer" style="display: none; align-items: center; gap: 8px;">
+                        <span class="text-sm">Threat Level:</span>
+                        <span id="sensitivityBadge" class="badge"></span>
+                    </div>
+                </div>
+
+                <div class="panel-body output-body">
+                    <div id="loader" class="loader-container" style="display: none;">
+                        <div class="scanning-bar"></div>
+                        <div class="loader-text">
+                            <span class="step distinctbert">Running DistinctBERT Classification...</span>
+                            <span class="step tinyllama" style="display:none; color: #8b5cf6;">Normalizing via TinyLlama...</span>
+                        </div>
+                    </div>
+
+                    <div id="idleState" class="idle-state">
+                        <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1" style="opacity: 0.3"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                        <p>Output will appear here after processing</p>
+                    </div>
+
+                    <div id="resultsBox" class="result-content" style="display: none;">
+                        <div class="code-block-header">
+                            <span>Cleaned String</span>
+                            <button class="copy-btn" onclick="copyToClipboard()">Copy</button>
+                        </div>
+                        <pre><code id="outputText"></code></pre>
+
+                        <div class="routing-log">
+                            <h4>Execution Log:</h4>
+                            <p id="routingDetails"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <p>Developed by <strong>Chaheth Senevirathne</strong> | Final Year Project 2026 | University of Bedfordshire</p>
+    </footer>
+
+    <script>
+        function updateThemeIcon(theme) {
+            const btn = document.getElementById("themeBtn");
+            if (theme === 'dark') {
+                btn.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>`;
+            } else {
+                btn.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+            }
+        }
+
+        function toggleTheme() {
+            const root = document.documentElement;
+            const currentTheme = root.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            root.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateThemeIcon(document.documentElement.getAttribute('data-theme'));
+        });
+
+        async function processText() {
+            const inputText = document.getElementById("inputText").value;
+            const btn = document.getElementById("analyzeBtn");
+
+            if (!inputText) return;
+
+            btn.disabled = true;
+            btn.innerHTML = `<svg class="spin" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Processing...`;
+
+            document.getElementById("idleState").style.display = "none";
+            document.getElementById("resultsBox").style.display = "none";
+            document.getElementById("sensitivityContainer").style.display = "none";
+            document.getElementById("loader").style.display = "flex";
+
+            const tinyStep = document.querySelector('.tinyllama');
+            setTimeout(() => {
+                if (tinyStep) tinyStep.style.display = 'block';
+            }, 1500);
+
+            try {
+                const response = await fetch('/api/process', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: inputText })
+                });
+
+                const data = await response.json();
+
+                document.getElementById("loader").style.display = "none";
+                if (tinyStep) tinyStep.style.display = 'none';
+                document.getElementById("resultsBox").style.display = "block";
+                document.getElementById("sensitivityContainer").style.display = "flex";
+
+                const badge = document.getElementById("sensitivityBadge");
+                badge.innerText = `${data.sensitivity_level} (${data.confidence})`;
+
+                badge.className = "badge";
+                if (data.sensitivity_level === "HIGH") badge.classList.add("badge-danger");
+                else if (data.sensitivity_level === "MEDIUM") badge.classList.add("badge-warning");
+                else badge.classList.add("badge-safe");
+
+                const log = document.getElementById("routingDetails");
+
+                if (data.sensitivity_level === "LOW") {
+                    log.innerHTML =
+                        `<span style="color:#10b981;">✓</span> <b>Preprocess:</b> Unicode normalization + stopword filtering<br>` +
+                        `<span style="color:#10b981;">✓</span> <b>Classifier Input:</b> ${data.classifier_input_used}<br>` +
+                        `<span style="color:#10b981;">✓</span> <b>DistinctBERT:</b> Cleared as safe<br>` +
+                        `<span style="color:#10b981;">✓</span> <b>Pipeline:</b> basic_clean() applied`;
+                } else {
+                    log.innerHTML =
+                        `<span style="color:#10b981;">✓</span> <b>Preprocess:</b> Unicode normalization + stopword filtering<br>` +
+                        `<span style="color:#10b981;">✓</span> <b>Classifier Input:</b> ${data.classifier_input_used}<br>` +
+                        `<span style="color:#ef4444;">⚠</span> <b>DistinctBERT:</b> Threat detected<br>` +
+                        `<span style="color:#8b5cf6;">↻</span> <b>Router:</b> Sent to TinyLlama<br>` +
+                        `<span style="color:#10b981;">✓</span> <b>TinyLlama:</b> Adversarial pattern neutralized`;
+                }
+
+                document.getElementById("outputText").innerText = data.cleaned_text;
+
+            } catch (error) {
+                console.error(error);
+                alert("Error connecting to AI Backend.");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h4l3-9 5 18 3-9h5"/></svg> Initialize Deep Scan`;
+            }
+        }
+
+        function copyToClipboard() {
+            const text = document.getElementById("outputText").innerText;
+            navigator.clipboard.writeText(text);
+            const btn = document.querySelector('.copy-btn');
+            btn.innerText = "Copied!";
+            setTimeout(() => btn.innerText = "Copy", 2000);
+        }
+    </script>
+</body>
+</html>
