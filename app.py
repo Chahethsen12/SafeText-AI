@@ -208,5 +208,6 @@ def process_text():
     })
 
 if __name__ == '__main__':
-    print("SafeText AI API is starting on http://127.0.0.1:5000")
-    app.run(port=5000, debug=True, use_reloader=False)
+    port = int(os.environ.get("PORT", 7860))
+    print(f"SafeText AI API is starting on http://0.0.0.0:{port}")
+    app.run(host="0.0.0.0", port=port, debug=False)
