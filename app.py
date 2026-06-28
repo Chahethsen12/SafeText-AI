@@ -36,7 +36,6 @@ lora_path = "Chahethsen/tinyllama-safetext-lora"
 
 llama_tokenizer = AutoTokenizer.from_pretrained(lora_path)
 
-# Removed device_map and bfloat16 for stable CPU execution on standard hardware
 llama_base = AutoModelForCausalLM.from_pretrained(
     tiny_base_id,
     low_cpu_mem_usage=True
