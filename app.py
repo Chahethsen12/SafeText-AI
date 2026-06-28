@@ -16,9 +16,13 @@ CORS(app)
 # 1. LOAD DISTINCTBERT (Sensitivity Classifier)
 # =====================================================================
 print("Loading DistinctBERT...")
-bert_path = "./models/distinctbert-safetext"
+bert_path = "Chahethsen/distinctbert-safetext"
 bert_tokenizer = AutoTokenizer.from_pretrained(bert_path)
 bert_model = AutoModelForSequenceClassification.from_pretrained(bert_path)
+
+# Force CPU routing safely for Spaces free tier
+device = "cpu"
+bert_model = bert_model.to(device)
 bert_model.eval()
 
 LABELS = ["LOW", "MEDIUM", "HIGH"]
@@ -28,47 +32,18 @@ LABELS = ["LOW", "MEDIUM", "HIGH"]
 # =====================================================================
 print("Loading TinyLlama Base Model and LoRA Adapters...")
 tiny_base_id = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
-lora_path = "./models/tinyllama-safetext-lora"
+lora_path = "Chahethsen/tinyllama-safetext-lora"
 
-llama_tokenizer = AutoTokenizer.from_pretrained(tiny_base_id)
+llama_tokenizer = AutoTokenizer.from_pretrained(lora_path)
 
+# Removed device_map and bfloat16 for stable CPU execution on standard hardware
 llama_base = AutoModelForCausalLM.from_pretrained(
     tiny_base_id,
-    torch_dtype=torch.bfloat16,
-    device_map="cpu",
     low_cpu_mem_usage=True
 )
 
-try:
-    llama_model = PeftModel.from_pretrained(llama_base, lora_path, is_trainable=False)
-    print("Standard PEFT loading successful!")
-except Exception as e:
-    print(f"Standard PEFT loading failed: {e}")
-    print("Applying manual weight fix to bypass key mismatch...")
-
-    from safetensors.torch import load_file
-
-    config = PeftConfig.from_pretrained(lora_path)
-    llama_model = PeftModel(llama_base, config)
-
-    weights_path = os.path.join(lora_path, "adapter_model.safetensors")
-    if os.path.exists(weights_path):
-        adapters_weights = load_file(weights_path)
-    else:
-        adapters_weights = torch.load(
-            os.path.join(lora_path, "adapter_model.bin"),
-            map_location="cpu"
-        )
-
-    fixed_weights = {}
-    for key, value in adapters_weights.items():
-        new_key = key.replace("base_model.model.model.", "base_model.model.")
-        fixed_weights[new_key] = value
-
-    llama_model.load_state_dict(fixed_weights, strict=False)
-    print("Manual weight fix applied successfully!")
-
-llama_model = llama_model.to("cpu")
+llama_model = PeftModel.from_pretrained(llama_base, lora_path)
+llama_model = llama_model.to(device)
 llama_model.eval()
 
 # =====================================================================
@@ -90,7 +65,7 @@ def bert_predict_proba(texts):
             truncation=True,
             max_length=256,
             padding=True
-        ).to("cpu")
+        ).to(device)
 
         with torch.no_grad():
             outputs = bert_model(**inputs)
@@ -145,7 +120,7 @@ Corrupted text:
 <|assistant|>
 """
 
-    llama_inputs = llama_tokenizer(prompt, return_tensors="pt").to("cpu")
+    llama_inputs = llama_tokenizer(prompt, return_tensors="pt").to(device)
 
     with torch.no_grad():
         generated_ids = llama_model.generate(

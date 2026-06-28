@@ -1,5 +1,5 @@
-# Use an official Python runtime as a parent image
-FROM python:3.9-slim
+# Use Python 3.11 to support your modern torch and numpy versions
+FROM python:3.11-slim
 
 # Set the working directory in the container
 WORKDIR /app
@@ -11,8 +11,8 @@ ENV PYTHONUNBUFFERED=1
 COPY . /app
 
 # Install any needed packages specified in requirements.txt
-# We use --no-cache-dir to keep the image size small
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
 # The application listens on port 7860 (Hugging Face Spaces default)
 EXPOSE 7860

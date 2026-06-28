@@ -1,16 +1,5 @@
 <div align="center">
 
-# 🛡️ SafeText AI
-
-**Advanced adversarial text detection, normalization, and sanitization powered by DistilBERT and TinyLlama.**
-
-[![Python](https://img.shields.io/badge/Python-3.8+-3776AB?style=flat&logo=python&logoColor=white)](https://www.python.org/)
-[![Flask](https://img.shields.io/badge/Flask-REST%20API-000000?style=flat&logo=flask)](https://flask.palletsprojects.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![HuggingFace](https://img.shields.io/badge/🤗%20Models-DistilBERT%20%7C%20TinyLlama-FFD21E)](https://huggingface.co/)
-
-</div>
-
 ---
 
 ## 📌 Overview
@@ -23,12 +12,12 @@ SafeText AI is a dual-model machine learning pipeline built to detect and neutra
 
 ## ✨ Features
 
-| Feature | Description |
-|---|---|
-| 🔍 **Sensitivity Classification** | DistilBERT-based classifier labels text as `LOW`, `MEDIUM`, or `HIGH` risk |
-| 🧹 **Text Normalization** | LoRA fine-tuned TinyLlama removes invisible characters, homoglyphs & adversarial patterns |
-| ⚡ **REST API** | Simple POST endpoint for programmatic integration |
-| 🌐 **Web Interface** | Responsive UI for real-time testing and visualization |
+| Feature                                | Description                                                                               |
+| -------------------------------------- | ----------------------------------------------------------------------------------------- |
+| 🔍**Sensitivity Classification** | DistilBERT-based classifier labels text as`LOW`, `MEDIUM`, or `HIGH` risk           |
+| 🧹**Text Normalization**         | LoRA fine-tuned TinyLlama removes invisible characters, homoglyphs & adversarial patterns |
+| ⚡**REST API**                   | Simple POST endpoint for programmatic integration                                         |
+| 🌐**Web Interface**              | Responsive UI for real-time testing and visualization                                     |
 
 ---
 
@@ -59,12 +48,14 @@ SafeText_App/
 ## 🚀 Installation
 
 **1. Clone the repository**
+
 ```bash
 git clone https://github.com/<your-username>/SafeText_App.git
 cd SafeText_App
 ```
 
 **2. Create and activate a virtual environment**
+
 ```bash
 python -m venv venv
 
@@ -76,6 +67,7 @@ source venv/bin/activate
 ```
 
 **3. Install dependencies**
+
 ```bash
 pip install -r requirements.txt
 ```
@@ -83,6 +75,7 @@ pip install -r requirements.txt
 **4. Add model weights**
 
 Place your fine-tuned models in the `models/` directory:
+
 ```
 models/
 ├── distinctbert-safetext/
@@ -105,9 +98,11 @@ If you wish to host model weights publicly, consider uploading them to [Hugging 
 ## 🖥️ Usage
 
 **Start the Flask development server:**
+
 ```bash
 python app.py
 ```
+
 Visit `http://127.0.0.1:5000` in your browser to use the web interface.
 
 ---
@@ -119,6 +114,7 @@ Visit `http://127.0.0.1:5000` in your browser to use the web interface.
 Analyze and normalize a text input.
 
 **Request**
+
 ```json
 {
   "text": "Your potentially unsafe or adversarial text here..."
@@ -126,6 +122,7 @@ Analyze and normalize a text input.
 ```
 
 **Response**
+
 ```json
 {
   "original_text": "...",
@@ -136,6 +133,7 @@ Analyze and normalize a text input.
 ```
 
 **Example with cURL:**
+
 ```bash
 curl -X POST http://127.0.0.1:5000/api/process \
   -H "Content-Type: application/json" \
