@@ -1,109 +1,90 @@
-<div align="center">
+---
+title: SelfText AI
+emoji: 🛡️
+colorFrom: red
+colorTo: blue
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
+# 🛡️ SelfText-AI
+
+**Advanced adversarial text detection, normalization, and sanitization powered by DistilBERT and TinyLlama.**
+
+SelfText-AI is a high-performance, dual-model machine learning pipeline built to detect and neutralize adversarial text—including invisible characters, homoglyph substitutions, and prompt injection patterns. Deployed natively on Hugging Face Spaces, it combines a fine-tuned DistilBERT classifier for risk-level detection with a PEFT LoRA-adapted TinyLlama model for intelligent text normalization, exposing its capabilities via a Flask REST API and an interactive web interface.
 
 ---
 
-## 📌 Overview
+## 🚀 Live Deployment
 
-SafeText AI is a dual-model machine learning pipeline built to detect and neutralize adversarial text — including invisible characters, homoglyph substitutions, and prompt injection patterns. It combines a fine-tuned **DistilBERT classifier** for risk-level detection with a **LoRA-adapted TinyLlama** model for intelligent text normalization, exposed through both a **Flask REST API** and an interactive **web interface**.
-
-> ⚠️ **Note:** Pre-trained model weights (`distinctbert-safetext` and `tinyllama-safetext-lora`) are not included in this repository due to size constraints. See [Model Setup](#-model-setup) below.
+SelfText-AI is actively hosted on Hugging Face Spaces using a Docker runtime environment.
+- **Hugging Face Space**: [Chahethsen/SafeText-AI](https://huggingface.co/spaces/Chahethsen/SafeText-AI)
+- **Infrastructure**: Python 3.11-slim Base Docker Image
+- **Server**: Gunicorn running on port `7860`
 
 ---
 
-## ✨ Features
+## ✨ Core Features
 
-| Feature                                | Description                                                                               |
-| -------------------------------------- | ----------------------------------------------------------------------------------------- |
-| 🔍**Sensitivity Classification** | DistilBERT-based classifier labels text as`LOW`, `MEDIUM`, or `HIGH` risk           |
-| 🧹**Text Normalization**         | LoRA fine-tuned TinyLlama removes invisible characters, homoglyphs & adversarial patterns |
-| ⚡**REST API**                   | Simple POST endpoint for programmatic integration                                         |
-| 🌐**Web Interface**              | Responsive UI for real-time testing and visualization                                     |
+| Feature | Description | Architecture |
+| :--- | :--- | :--- |
+| **🚨 Sensitivity Classification** | Classifies incoming text streams as `LOW`, `MEDIUM`, or `HIGH` risk. | Fine-tuned **DistilBERT** (`Chahethsen/distinctbert-safetext`) |
+| **🧹 Intelligent Normalization** | Strips invisible characters, homoglyphs, and adversarial patterns. | LoRA fine-tuned **TinyLlama** (`Chahethsen/tinyllama-safetext-lora`) |
+| **🌐 RESTful API** | A programmatic POST endpoint for seamless enterprise integration. | Flask + Gunicorn |
+| **🖥️ Interactive UI** | Responsive web interface for real-time visualization and testing. | HTML5 + CSS3 / Jinja2 |
+| **🗄️ Persistence Layer** | Scalable, document-based storage for logging and analytics. | **MongoDB** |
+
+---
+
+## 🏗️ Architecture & Model Loading
+
+SafeText-AI has evolved from a local-only implementation to a cloud-native architecture. 
+
+**Dynamic Model Provisioning:**
+Model weights are *no longer hosted locally*. Upon initialization, `app.py` dynamically streams the required models directly from the Hugging Face Hub:
+1. `Chahethsen/distinctbert-safetext` (Classifier & Tokenizer)
+2. `Chahethsen/tinyllama-safetext-lora` (LoRA Adapter & Tokenizer)
+
+**Infrastructure Optimization:**
+To accommodate the Hugging Face Spaces free tier limits (16GB System RAM, No GPU), the container is explicitly configured to load the TinyLlama PEFT architecture natively on **standard CPU precision**. This prevents disk thrashing and out-of-memory exceptions while maintaining inference stability.
 
 ---
 
 ## 🗂️ Project Structure
 
-```
-SafeText_App/
-├── app.py                  # Flask server entry point & model loading
-├── preprocess.py           # Text preprocessing utilities
-├── requirements.txt        # Python dependencies
-├── models/                 # Fine-tuned model weights (not in source control)
-│   ├── distinctbert-safetext/
-│   └── tinyllama-safetext-lora/
-├── templates/              # Jinja2 HTML templates
-└── static/                 # CSS & JavaScript assets
+```text
+SelfText-AI/
+├── Dockerfile              # Docker runtime configuration (Python 3.11-slim)
+├── app.py                  # Flask REST API, Gunicorn entry point & HF Hub integration
+├── preprocess.py           # Text sanitization and tokenization pipelines
+├── requirements.txt        # Production Python dependencies
+├── templates/              # Jinja2 HTML rendering templates
+└── static/                 # Front-end CSS & JavaScript assets
 ```
 
 ---
 
-## ⚙️ Prerequisites
+## ⚙️ Local Development Setup
 
-- Python 3.8+
-- CUDA-compatible GPU (recommended for inference speed)
-- Fine-tuned model weights in the `models/` directory
-
----
-
-## 🚀 Installation
-
-**1. Clone the repository**
+To run the application in a local testing environment, execute the following commands in your terminal:
 
 ```bash
-git clone https://github.com/<your-username>/SafeText_App.git
-cd SafeText_App
-```
+# 1. Clone the repository
+git clone https://github.com/YourUsername/SelfText-AI.git
+cd SelfText-AI
 
-**2. Create and activate a virtual environment**
+# 2. Create and activate a virtual environment
+python3.11 -m venv venv
+source venv/bin/activate  # On Windows use: venv\Scripts\activate
 
-```bash
-python -m venv venv
-
-# Windows
-venv\Scripts\activate
-
-# macOS / Linux
-source venv/bin/activate
-```
-
-**3. Install dependencies**
-
-```bash
+# 3. Install dependencies
+pip install --upgrade pip
 pip install -r requirements.txt
-```
 
-**4. Add model weights**
-
-Place your fine-tuned models in the `models/` directory:
-
-```
-models/
-├── distinctbert-safetext/
-└── tinyllama-safetext-lora/
-```
-
----
-
-## 🧩 Model Setup
-
-The two models powering SafeText AI:
-
-- **`distinctbert-safetext`** — A DistilBERT model fine-tuned for adversarial text sensitivity classification (`LOW` / `MEDIUM` / `HIGH`).
-- **`tinyllama-safetext-lora`** — A TinyLlama 1.1B model fine-tuned with LoRA (PEFT) to normalize and sanitize corrupted or adversarial input text.
-
-If you wish to host model weights publicly, consider uploading them to [Hugging Face Hub](https://huggingface.co/models) and loading them via `from_pretrained()`.
-
----
-
-## 🖥️ Usage
-
-**Start the Flask development server:**
-
-```bash
+# 4. Start the Flask application
 python app.py
 ```
-
-Visit `http://127.0.0.1:5000` in your browser to use the web interface.
 
 ---
 
@@ -111,43 +92,29 @@ Visit `http://127.0.0.1:5000` in your browser to use the web interface.
 
 ### `POST /api/process`
 
-Analyze and normalize a text input.
+Analyzes and normalizes a given text payload.
 
-**Request**
-
+**Request Body:**
 ```json
 {
-  "text": "Your potentially unsafe or adversarial text here..."
+  "text": "Your adversarial or corrupted string here..."
 }
 ```
 
-**Response**
-
+**Successful Response:**
 ```json
 {
-  "original_text": "...",
+  "original_text": "Your adversarial or corrupted string here...",
   "normalized_text": "...",
-  "risk_level": "HIGH",
-  "confidence": 0.97
+  "processed_text": "...",
+  "classifier_input_used": "processed_text",
+  "sensitivity_level": "HIGH",
+  "confidence": "98.45%",
+  "cleaned_text": "Cleaned string ready for downstream consumption.",
+  "probabilities": {
+    "LOW": 0.005,
+    "MEDIUM": 0.010,
+    "HIGH": 0.985
+  }
 }
 ```
-
-**Example with cURL:**
-
-```bash
-curl -X POST http://127.0.0.1:5000/api/process \
-  -H "Content-Type: application/json" \
-  -d '{"text": "H\u200bello W\u0041\u0301orld"}'
-```
-
----
-
-## 🤝 Contributing
-
-Contributions, issues, and feature requests are welcome. Please open an issue first to discuss any significant changes.
-
----
-
-## 📄 License
-
-This project is licensed under the [MIT License](LICENSE).
